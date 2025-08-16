@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Commercial Invoice Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', 'Arial', 'Times New Roman', serif;
+            margin: 0;
+            background: #FFF;
+        }
+        .invoice-container {
+            background: #FFF;
+            margin: 30px auto 30px auto;
+            max-width: 794px; /* A4 width in px for 96dpi */
+            padding: 32px 40px 40px 40px;
+            position: relative;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background: #F5F5F5;
+            border-radius: 12px 12px 0 0;
+            padding: 14px 0 14px 0;
+            border-bottom: 1.5px solid #e3e3e3;
+        }
+        .header-col {
+            width: 27%;
+            font-size: 1em;
+        }
+        .header-center {
+            width: 46%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .invoice-title {
+            text-align: center;
+            margin: 22px 0 29px 0;
+            font-size: 2.2em;
+            font-weight: bold;
+            text-decoration: underline;
+            letter-spacing: 2px;
+            color: #b70000;
+            text-shadow: 0 2px 8px #fff8ce;
+        }
+        .client-info-modern {
+            background: #fff;
+            padding: 24px 24px 18px 24px;
+            margin-bottom: 24px;
+            margin-top: 8px;
+            border-radius: 14px;
+            box-shadow: 0 2px 14px 0 #e7e7e7, 0 1.5px 0 #eaeaea;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-gap: 18px 32px;
+            align-items: center;
+        }
+        .client-info-modern label {
+            font-weight: 600;
+            color: #2457c5;
+            margin-bottom: 5px;
+            display: block;
+            font-size: 1em;
+        }
+        .client-info-modern input {
+            width: 100%;
+            border-radius: 6px;
+            border: 1.5px solid #e2d391;
+            padding: 7px 12px;
+            font-size: 1.06em;
+            background: #fffef7;
+            margin-bottom: 2px;
+            box-shadow: 0 1px 6px #f2c33c1a;
+            transition: border-color 0.2s;
+            resize: vertical;
+        }
+        .client-info-modern input:focus {
+            border-color: #2457c5;
+            outline: none;
+            background: #f6f9ff;
+        }
+        .table-container {
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 14px 0 #ededed;
+            table-layout: fixed;
+            word-break: break-word;
+        }
+        th, td {
+            border-bottom: 1.5px solid #eee;
+            padding: 13px 8px;
+            text-align: left;
+            font-size: 1em;
+            vertical-align: top;
+            background: #fff;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+        th {
+            background: #f7f7f7;
+            color: #2457c5;
+            font-weight: 700;
+            border-bottom: 2.5px solid #eecf65;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        td input, td textarea {
+            width: 100%;
+            border-radius: 4px;
+            border: 1px solid #e2d391;
+            padding: 7px 8px;
+            font-size: 1em;
+            background: #fffef7;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 36px;
+        }
+        td textarea {
+            min-height: 36px;
+            font-family: inherit;
+        }
+        td input:focus, td textarea:focus {
+            border-color: #2457c5;
+            outline: none;
+            background: #f6f9ff;
+        }
+        .item-total {
+            font-weight: 600;
+            color: #444;
+        }
+        tfoot td {
+            font-weight: bold;
+            background: #fffde3;
+        }
+        .total-row {
+            text-align: right;
+        }
+        .btn {
+            padding: 8px 24px;
+            font-size: 1.05em;
+            margin: 18px 8px 0 0;
+            border-radius: 7px;
+            border: none;
+            background: linear-gradient(90deg, #2457c5 0%, #57a1e2 100%);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 12px #b0b7d1;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: linear-gradient(90deg, #b70000 0%, #e2c600 100%);
+            color: #fff;
+        }
+        .footer-info-section {
+            display: flex;
+            align-items: center;
+            margin-top: 30px;
+            padding: 18px 0 10px 0;
+            border-radius: 10px;
+            background: #F5F5F5;
+            box-shadow: 0 2px 10px #f2c33c33;
+        }
+        .footer-qrcode {
+            margin-left: 30px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+        }
+        .footer-message {
+            font-size: 1.08em;
+            color: #003a73;
+            font-weight: bold;
+            margin-left: 12px;
+        }
+        @media print {
+            .remove-col, .remove-btn {
+                display: none !important;
+            }
+            .footer-info-section {
+                page-break-inside: avoid;
+            }
+        }
+        @media (max-width: 900px) {
+            .client-info-modern {
+                grid-template-columns: 1fr;
+            }
+            .table-container, table, th, td {
+                font-size: 0.97em;
+            }
+            .footer-message {
+                font-size: 0.95em;
+            }
+        }
+        @media (max-width: 500px) {
+            .invoice-container {
+                padding: 8px 3vw 12vw 3vw;
+            }
+            .footer-message {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+  <div class="invoice-container">
+    <form id="invoiceForm" onsubmit="event.preventDefault();">
+      <div class="header">
+        <div class="header-col" style="text-align:left;">
+          <div>EL HEKMA Engineering Office</div>
+          <div>ADD: 41 Al-Mawardi Street, Al-Qasr Al-Aini, Cairo, Egypt</div>
+          <div>Tel: +20 11 47304880</div>
+          <div>Fax: +2027932115</div>
+          <div>Email: el_hekma2013@yahoo.com</div>
+        </div>
+        <div class="header-center">
+          <!-- Logo removed for PDF & UI -->
+        </div>
+        <div class="header-col" style="text-align:right; direction:rtl;">
+          <div>مكتب الحكمة الهندسي</div>
+          <div>العنوان: ٤١ شارع الماوردي، القصر العيني، القاهرة، مصر</div>
+          <div>تليفون: ٢٠ ١١ ٤٧٣٠٤٨٨٠+</div>
+          <div>فاكس: ٢٠٢٧٩٣٢١١٥+</div>
+          <div>البريد الإلكتروني: el_hekma2013@yahoo.com</div>
+        </div>
+      </div>
+      <div class="invoice-title">Commercial Invoice</div>
+      <!-- Seal removed for PDF & UI -->
+      <div class="client-info-modern">
+        <div>
+          <label for="client_name">Client:</label>
+          <input type="text" id="client_name" name="client_name">
+        </div>
+        <div>
+          <label for="client_tel">Tel:</label>
+          <input type="text" id="client_tel" name="client_tel">
+        </div>
+        <div>
+          <label for="client_address">Add:</label>
+          <input type="text" id="client_address" name="client_address">
+        </div>
+        <div>
+          <label for="invoice_date">Date:</label>
+          <input type="date" id="invoice_date" name="invoice_date">
+        </div>
+        <div>
+          <label for="pi_no">PI No.:</label>
+          <input type="text" id="pi_no" name="pi_no">
+        </div>
+      </div>
+      <div class="table-container">
+        <table id="itemsTable">
+          <thead>
+            <tr>
+              <th style="width: 40px;">#</th>
+              <th style="width: 140px;">Item Code</th>
+              <th>Description</th>
+              <th style="width: 100px;">Quantity</th>
+              <th style="width: 130px;">Unit Price</th>
+              <th style="width: 120px;">Total</th>
+              <th class="remove-col" style="width: 70px;">Remove</th>
+            </tr>
+          </thead>
+          <tbody id="itemsBody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="total-row">Grand Total:</td>
+              <td id="grandTotal">0.00</td>
+              <td class="remove-col"></td>
+            </tr>
+          </tfoot>
+        </table>
+        <button class="btn" type="button" onclick="addRow()">Add Item</button>
+        <button class="btn" type="button" onclick="generatePDF()">Generate Invoice PDF</button>
+      </div>
+      <div class="footer-info-section">
+        <div class="footer-qrcode">
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJYAAACWCAYAAAA8AXHiAAABhklEQVR4nO3bMQrCMBRFUZ4j+7+7XQk2JpQGZy8V6z1Q2y4Xr5oX8F8wMIAAEEwgABBMIAkFQn2M6P5fQGuN50nfE5+vTHN8leD1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9V8D1XwPVfA9UgABBMIAAQTCABBNwB9f+6w4p2wS8QAAAABJRU5ErkJggg==" alt="QR Code to https://heomed.com/" style="width: 85px; height: 85px; border-radius: 7px; border: 2px solid #003a73;">
+        </div>
+        <div class="footer-message">
+          For more information, you can visit our website: <a href="https://heomed.com/" target="_blank" style="color:#b70000;text-decoration:underline;">https://heomed.com/</a>
+        </div>
+      </div>
+    </form>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    // Add a new item row
+    function addRow(data={}) {
+      let table = document.getElementById('itemsBody');
+      let rowCount = table.rows.length;
+      let row = table.insertRow();
+      row.innerHTML = `
+        <td>${rowCount+1}</td>
+        <td><input type="text" value="${data.itemCode || ''}" style="width:100%;" aria-label="Item Code"></td>
+        <td><textarea style="width:100%;" aria-label="Description">${data.description || ''}</textarea></td>
+        <td><input type="number" min="0" step="any" value="${data.qty || ''}" style="width:100%;" aria-label="Quantity" oninput="updateTotals()"></td>
+        <td><input type="number" min="0" step="any" value="${data.unitPrice || ''}" style="width:100%;" aria-label="Unit Price" oninput="updateTotals()"></td>
+        <td class="item-total">0.00</td>
+        <td class="remove-col"><button type="button" class="remove-btn" onclick="removeRow(this)" aria-label="Remove Row">X</button></td>
+      `;
+    }
+    // Remove an item row
+    function removeRow(btn) {
+      let row = btn.parentNode.parentNode;
+      row.parentNode.removeChild(row);
+      updateRowIndices();
+      updateTotals();
+    }
+    // Update item row indices
+    function updateRowIndices() {
+      let rows = document.querySelectorAll("#itemsBody tr");
+      rows.forEach((row, idx) => { row.cells[0].textContent = idx+1; });
+    }
+    // Update totals for all items and grand total
+    function updateTotals() {
+      let rows = document.querySelectorAll("#itemsBody tr");
+      let grand = 0.0;
+      rows.forEach(row => {
+        let qty = parseFloat(row.cells[3].querySelector('input').value) || 0;
+        let price = parseFloat(row.cells[4].querySelector('input').value) || 0;
+        let total = qty * price;
+        row.cells[5].textContent = total.toFixed(2);
+        grand += total;
+      });
+      document.getElementById("grandTotal").textContent = grand.toFixed(2);
+    }
+    // Add 5 initial empty rows
+    for(let i=0; i<5; ++i) addRow();
+    document.getElementById('itemsBody').addEventListener('input', updateTotals);
+    updateTotals(); // Make sure total is correct after adding rows
+
+    // Enhanced PDF Generation: Remove logo/seal, improve clarity for print
+    async function generatePDF() {
+      let form = document.getElementById('invoiceForm');
+      let clone = form.cloneNode(true);
+
+      // Hide Remove column for PDF
+      clone.querySelectorAll('.remove-col, .remove-btn').forEach(el => el.style.display = "none");
+
+      // Hide all buttons
+      clone.querySelectorAll('button').forEach(el => el.style.display = "none");
+
+      // Remove header logo/seal if any (already removed from UI)
+      let headerCenter = clone.querySelector('.header-center');
+      if (headerCenter) headerCenter.innerHTML = "";
+
+      // Remove any .seal-img if hidden in legacy HTML
+      clone.querySelectorAll('.seal-img').forEach(el => el.remove());
+
+      // Convert all inputs and textareas to spans (for clean PDF)
+      clone.querySelectorAll('input[type="text"],input[type="date"],input[type="number"]').forEach(inp => {
+        let span = document.createElement('span');
+        span.textContent = inp.value;
+        span.style.marginRight = "8px";
+        inp.parentNode.replaceChild(span, inp);
+      });
+      clone.querySelectorAll('textarea').forEach(inp => {
+        let span = document.createElement('span');
+        span.textContent = inp.value;
+        span.style.marginRight = "8px";
+        span.style.whiteSpace = "pre-wrap";
+        inp.parentNode.replaceChild(span, inp);
+      });
+
+      // Remove select/click handlers for safety
+      clone.querySelectorAll('*').forEach(el => { el.onclick = null; });
+
+      // Remove Remove buttons from table (for safety)
+      clone.querySelectorAll('table tr').forEach(tr => {
+        let c = tr.cells.length;
+        if (c > 6 && tr.cells[c-1].classList.contains('remove-col')) {
+          tr.deleteCell(c-1);
+        }
+      });
+
+      // Set a standard A4 width in pixels for the PDF rendering
+      clone.style.width = "794px";
+      clone.style.maxWidth = "794px";
+      clone.style.minWidth = "794px";
+      clone.style.margin = "0 auto";
+      clone.style.boxShadow = "none";
+
+      let pdfDiv = document.createElement('div');
+      pdfDiv.style.position = "fixed";
+      pdfDiv.style.left = "-9999px";
+      pdfDiv.appendChild(clone);
+      document.body.appendChild(pdfDiv);
+
+      // Use higher scale for better clarity
+      let canvas = await html2canvas(clone, { scale: 3, backgroundColor: "#fff", useCORS: true });
+      document.body.removeChild(pdfDiv);
+
+      const { jsPDF } = window.jspdf;
+      let pdf = new jsPDF({ orientation: 'p', unit: 'pt', format: 'a4' });
+      let pdfWidth = pdf.internal.pageSize.getWidth();
+      let margin = 24;
+      let imgWidth = pdfWidth - margin * 2;
+      let imgHeight = canvas.height * imgWidth / canvas.width;
+
+      // If image height > page height, add extra pages
+      let pageHeight = pdf.internal.pageSize.getHeight();
+      let position = 20;
+      let imgData = canvas.toDataURL('image/png');
+
+      if (imgHeight < pageHeight - margin * 2) {
+        pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+      } else {
+        let remainingHeight = imgHeight;
+        let y = position;
+        let pageCanvas = document.createElement('canvas');
+        let ctx = pageCanvas.getContext('2d');
+        let sX = 0, sY = 0;
+        let pageImgHeight = pageHeight - margin * 2;
+        let scale = canvas.width / imgWidth;
+
+        while (remainingHeight > 0) {
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = Math.min(pageImgHeight * scale, remainingHeight * scale);
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+          ctx.drawImage(canvas, sX, sY, canvas.width, pageCanvas.height, 0, 0, canvas.width, pageCanvas.height);
+          let pageImgData = pageCanvas.toDataURL("image/png");
+          if (y !== position) pdf.addPage();
+          pdf.addImage(pageImgData, 'PNG', margin, position, imgWidth, (pageCanvas.height / scale));
+          sY += pageCanvas.height;
+          remainingHeight -= (pageCanvas.height / scale);
+          y = 0;
+        }
+      }
+      pdf.save('Commercial_Invoice.pdf');
+    }
+  </script>
+</body>
+</html>
